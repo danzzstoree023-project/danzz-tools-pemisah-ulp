@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DANZZ TOOLS — Pemisah ULP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+        }
+        :root {
+            --primary: #22d3ee;
+            --secondary: #10b981;
+            --accent: #3b82f6;
+            --dark: #0f172a;
+            --darker: #020617;
+            --glass: rgba(15, 23, 42, 0.85);
+            --shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+        body {
+            background: linear-gradient(135deg, #020617 0%, #1e3a8a 50%, #065f46 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 1.5rem;
+            color: #e2e8f0;
+            position: relative;
+            overflow-x: hidden;
+        }
+        /* ===== BACKGROUND WATERMARK + PROGRESS ===== */
+        .bg-watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: clamp(2.5rem, 12vw, 7rem);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: rgba(255, 255, 255, 0.08);
+            pointer-events: none;
+            white-space: nowrap;
+            z-index: 0;
+            text-shadow: 0 0 40px rgba(34, 211, 238, 0.1);
+        }
+        .bg-progress-text {
+            position: fixed;
+            top: 65%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: clamp(3rem, 15vw, 9rem);
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.05);
+            pointer-events: none;
+            z-index: 0;
+            transition: all 0.3s ease;
+        }
+        .container {
+            max-width: 950px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        header {
+            text-align: center;
+            padding: 2.5rem 2rem;
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            animation: fadeDown 0.6s ease-out;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(34, 211, 238, 0.2);
+        }
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--accent), var(--secondary));
+        }
+        header h1 {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0;
+        }
+        .card {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 1.5rem;
+            animation: fadeUp 0.6s ease-out;
+            transition: transform 0.3s ease;
+            position: relative;
+            border: 1px solid rgba(34, 211, 238, 0.15);
+        }
+        .card:hover {
+            transform: translateY(-2px);
+        }
+        h2 {
+            color: var(--primary);
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .format-box {
+            background: linear-gradient(135deg, rgba(34, 211, 238, 0.1), rgba(16, 185, 129, 0.1));
+            border-left: 4px solid var(--primary);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: #a5f3fc;
+            word-break: break-all;
+        }
+        .upload-area {
+            border: 3px dashed rgba(34, 211, 238, 0.4);
+            border-radius: 16px;
+            padding: 3rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            margin-bottom: 1.5rem;
+            background: rgba(15, 23, 42, 0.5);
+        }
+        .upload-area:hover, .upload-area.dragover {
+            border-color: var(--primary);
+            background: rgba(34, 211, 238, 0.1);
+            transform: scale(1.02);
+        }
+        .upload-area svg {
+            width: 64px;
+            height: 64px;
+            fill: var(--primary);
+            margin-bottom: 1rem;
+        }
+        input[type="file"] { display: none; }
+        .file-note {
+            background: rgba(34, 211, 238, 0.08);
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #99f6e4;
+        }
+        .progress-container {
+            width: 100%;
+            height: 12px;
+            background: rgba(30, 64, 175, 0.4);
+            border-radius: 999px;
+            overflow: hidden;
+            margin: 1.5rem 0;
+            display: none;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 999px;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 15px rgba(34, 211, 238, 0.5);
+        }
+        .progress-text {
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            display: none;
+        }
+        button {
+            padding: 1rem 1.5rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: #0f172a;
+            box-shadow: 0 4px 15px rgba(34, 211, 238, 0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(34, 211, 238, 0.4);
+        }
+        .btn-success {
+            background: linear-gradient(90deg, #10b981, #059669);
+            color: white;
+        }
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+        .btn-secondary:hover {
+            background: rgba(34, 211, 238, 0.1);
+        }
+        .btn-danger {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+            color: white;
+        }
+        .btn-danger:hover {
+            opacity: 0.9;
+        }
+        .btn-group {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+        .btn-group button { flex: 1; min-width: 160px; }
+        textarea {
+            width: 100%;
+            min-height: 260px;
+            padding: 1.25rem;
+            border: 2px solid rgba(34, 211, 238, 0.3);
+            border-radius: 14px;
+            font-size: 0.9rem;
+            font-family: 'Courier New', monospace;
+            line-height: 1.8;
+            background: rgba(15, 23, 42, 0.8);
+            resize: vertical;
+            margin-top: 0.5rem;
+            color: #e0f2fe;
+        }
+        .stats {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin: 1.5rem 0;
+        }
+        .stat-box {
+            background: linear-gradient(135deg, rgba(34, 211, 238, 0.1), rgba(16, 185, 129, 0.1));
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            font-weight: 600;
+            flex: 1;
+            min-width: 140px;
+            text-align: center;
+            border: 1px solid rgba(34, 211, 238, 0.15);
+        }
+        .stat-box strong {
+            display: block;
+            font-size: 1.4rem;
+            color: var(--primary);
+            margin-top: 0.3rem;
+        }
+        .hidden { display: none !important; }
+        @keyframes fadeUp { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
+        @keyframes fadeDown { from { opacity:0; transform: translateY(-20px); } to { opacity:1; transform: translateY(0); } }
+        @media (max-width: 640px) {
+            body { padding: 1rem; }
+            header h1 { font-size: 1.5rem; }
+            .card { padding: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== WATERMARK BACKGROUND ===== -->
+    <div class="bg-watermark">DANZZ TOOLS PEMISAH ULP</div>
+    <!-- ===== PROGRESS DI BACKGROUND ===== -->
+    <div class="bg-progress-text" id="bgProgressPercent">0%</div>
+
+    <div class="container">
+        <header>
+            <h1>✨ DANZZ TOOLS — PEMISAH ULP</h1>
+        </header>
+
+        <div class="card">
+            <h2>📋 Format Hasil</h2>
+            <div class="format-box">
+                https://mtacc.mobilelegends.com/:FireADC9911:o96kp04m3x6
+            </div>
+
+            <h2>📤 Unggah File Sumber</h2>
+            <div class="file-note">
+                📄 Mendukung file: <strong>privat ulp.txt</strong>, data.txt, dan semua file teks
+            </div>
+            <div class="upload-area" id="uploadArea">
+                <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                <p><strong>Klik di sini</strong> atau seret file (.txt / .ulp / .log)</p>
+                <p style="font-size:0.9rem; color:#94a3b8; margin-top:0.5rem;">Semua proses di perangkatmu — aman & cepat!</p>
+                <input type="file" id="fileInput" accept=".txt,.ulp,.log,.csv,.md,text/*">
+            </div>
+            <p id="fileStatus" style="color:#94a3b8; margin-bottom:1rem; font-weight:500;"></p>
+
+            <button class="btn-primary" id="extractBtn">🚀 MULAI EKSTRAKSI</button>
+
+            <!-- Progress Bar -->
+            <div class="progress-text" id="progressText">Memproses... <span id="percentText">0</span>%</div>
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+        </div>
+
+        <div class="card hidden" id="resultSection">
+            <h2>✅ HASIL EKSTRAKSI LINK</h2>
+            
+            <div class="stats">
+                <div class="stat-box">
+                    🔗 Total Link
+                    <strong id="foundCount">0</strong>
+                </div>
+                <div class="stat-box">
+                    🗑️ Duplikat Dihapus
+                    <strong id="removedCount">0</strong>
+                </div>
+                <div class="stat-box">
+                    ✅ Unik
+                    <strong id="uniqueCount">0</strong>
+                </div>
+            </div>
+
+            <label style="font-weight:600; color:#cbd5e1;">📋 Semua Link Lengkap:</label>
+            <textarea id="resultOutput" readonly placeholder="Hasil link lengkap akan muncul di sini..."></textarea>
+
+            <div class="btn-group">
+                <button class="btn-success" id="downloadBtn">💾 UNDUH FILE (.txt)</button>
+                <button class="btn-secondary" id="copyBtn">📋 SALIN SEMUA LINK</button>
+                <button class="btn-danger" id="resetBtn">🔄 RESET BARU</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileStatus = document.getElementById('fileStatus');
+        const extractBtn = document.getElementById('extractBtn');
+        const resultSection = document.getElementById('resultSection');
+        const resultOutput = document.getElementById('resultOutput');
+        const foundCount = document.getElementById('foundCount');
+        const removedCount = document.getElementById('removedCount');
+        const uniqueCount = document.getElementById('uniqueCount');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const progressBar = document.getElementById('progressBar');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressText = document.getElementById('progressText');
+        const percentText = document.getElementById('percentText');
+        const bgProgressPercent = document.getElementById('bgProgressPercent');
+
+        let fileContent = '';
+        let fullLinks = [];
+        const BASE_URL = 'https://mtacc.mobilelegends.com/';
+
+        // === Unggah File ===
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+        uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+        uploadArea.addEventListener('drop', e => {
+            e.preventDefault(); uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) readFile(e.dataTransfer.files[0]);
+        });
+        fileInput.addEventListener('change', e => {
+            if (e.target.files.length) readFile(e.target.files[0]);
+        });
+
+        function readFile(file) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                fileContent = e.target.result;
+                fileStatus.textContent = `✅ File dimuat: ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
+            };
+            reader.readAsText(file);
+        }
+
+        // === Progress Animation — Update di Background & Bar ===
+        function animateProgress(toPercent) {
+            return new Promise(resolve => {
+                progressContainer.style.display = 'block';
+                progressText.style.display = 'block';
+                let current = parseInt(progressBar.style.width) || 0;
+                const step = Math.ceil((toPercent - current) / 8);
+                const interval = setInterval(() => {
+                    current += step;
+                    if (current >= toPercent) {
+                        current = toPercent;
+                        clearInterval(interval);
+                        resolve();
+                    }
+                    progressBar.style.width = current + '%';
+                    percentText.textContent = current;
+                    bgProgressPercent.textContent = current + '%';
+                }, 30);
+            });
+        }
+
+        // === Ekstraksi ===
+        extractBtn.addEventListener('click', async () => {
+            if (!fileContent) return alert('⚠️ Silakan unggah file dulu!');
+            
+            progressBar.style.width = '0%';
+            progressContainer.style.display = 'block';
+            progressText.style.display = 'block';
+            bgProgressPercent.textContent = '0%';
+
+            await animateProgress(15);
+            const regex = /:[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+/g;
+            await animateProgress(40);
+            
+            const matches = fileContent.match(regex) || [];
+            await animateProgress(65);
+
+            const uniqueFormats = [...new Set(matches)];
+            await animateProgress(85);
+
+            fullLinks = uniqueFormats.map(fmt => BASE_URL + fmt);
+            await animateProgress(100);
+
+            resultOutput.value = fullLinks.join('\n');
+            foundCount.textContent = fullLinks.length;
+            removedCount.textContent = matches.length - uniqueFormats.length;
+            uniqueCount.textContent = uniqueFormats.length;
+
+            setTimeout(() => {
+                progressContainer.style.display = 'none';
+                progressText.style.display = 'none';
+                progressBar.style.width = '0%';
+                bgProgressPercent.textContent = '';
+            }, 1500);
+
+            resultSection.classList.remove('hidden');
+            resultSection.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        // === Unduh TXT ===
+        downloadBtn.addEventListener('click', () => {
+            if (!fullLinks.length) return;
+            const blob = new Blob([fullLinks.join('\n')], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `DANZZ-ULP-LINK-${new Date().toISOString().slice(0,10)}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        // === Salin ===
+        copyBtn.addEventListener('click', async () => {
+            if (!fullLinks.length) return;
+            await navigator.clipboard.writeText(fullLinks.join('\n'));
+            alert('✅ Semua link berhasil disalin!');
+        });
+
+        // === Reset ===
+        resetBtn.addEventListener('click', () => {
+            fileContent = '';
+            fullLinks = [];
+            fileInput.value = '';
+            fileStatus.textContent = '';
+            resultSection.classList.add('hidden');
+            progressContainer.style.display = 'none';
+            progressText.style.display = 'none';
+            progressBar.style.width = '0%';
+            bgProgressPercent.textContent = '';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    </script>
+</body>
+</html>
