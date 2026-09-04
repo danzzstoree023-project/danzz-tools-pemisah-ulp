@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DANZZ TOOLS — Pemisah ULP</title>
+    <style>
+        * {margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', sans-serif;}
+        :root {--primary:#22d3ee; --secondary:#10b981; --dark:#0f172a;}
+        body {
+            background:linear-gradient(135deg, #020617 0%, #1e3a8a 50%, #065f46 100%);
+            min-height:100vh; padding:1.5rem; color:#e2e8f0; position:relative;
+        }
+        .bg-watermark {
+            position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+            font-size:clamp(2.5rem,12vw,7rem); font-weight:900; text-transform:uppercase;
+            color:rgba(255,255,255,0.08); pointer-events:none; white-space:nowrap; z-index:0;
+        }
+        .bg-progress-text {
+            position:fixed; top:65%; left:50%; transform:translate(-50%,-50%);
+            font-size:clamp(3rem,15vw,9rem); font-weight:900; color:rgba(255,255,255,0.05);
+            pointer-events:none; z-index:0;
+        }
+        .container {max-width:950px; margin:0 auto; position:relative; z-index:1;}
+        header {
+            text-align:center; padding:2.5rem 2rem; background:rgba(15,23,42,0.85);
+            backdrop-filter:blur(12px); border-radius:24px; margin-bottom:2rem;
+            border:1px solid rgba(34,211,238,0.2);
+        }
+        header h1 {
+            background:linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+            font-size:2rem; font-weight:800;
+        }
+        .card {
+            background:rgba(15,23,42,0.85); backdrop-filter:blur(12px); border-radius:20px;
+            padding:2rem; margin-bottom:1.5rem; border:1px solid rgba(34,211,238,0.15);
+        }
+        h2 {color:var(--primary); font-size:1.25rem; margin-bottom:1rem;}
+        .format-box {
+            background:rgba(34,211,238,0.1); border-left:4px solid var(--primary);
+            padding:1rem; border-radius:12px; margin-bottom:1.5rem;
+            font-family:monospace; color:#a5f3fc; word-break:break-all;
+        }
+        .upload-box {
+            border:3px dashed rgba(34,211,238,0.5); border-radius:16px; padding:2.5rem 1.5rem;
+            text-align:center; cursor:pointer; transition:all 0.3s;
+            background:rgba(15,23,42,0.5); margin-bottom:1rem;
+        }
+        .upload-box:hover {border-color:var(--primary); background:rgba(34,211,238,0.1);}
+        input[type="file"] {display:none;}
+        .info-note {
+            background:rgba(34,211,238,0.08); padding:0.75rem; border-radius:8px;
+            margin-bottom:1rem; font-size:0.9rem; color:#99f6e4;
+        }
+        .status {margin-bottom:1rem; font-weight:500; min-height:2rem;}
+        button {
+            padding:1rem 1.5rem; border:none; border-radius:12px; font-size:1rem;
+            font-weight:700; cursor:pointer; transition:all 0.3s; width:100%;
+        }
+        .btn-primary {
+            background:linear-gradient(90deg, var(--primary), var(--secondary)); color:#0f172a;
+            box-shadow:0 4px 15px rgba(34,211,238,0.3);
+        }
+        .btn-primary:hover {transform:translateY(-2px);}
+        .btn-primary:disabled {opacity:0.5; cursor:not-allowed; transform:none;}
+        .progress-container {
+            width:100%; height:12px; background:rgba(30,64,175,0.4); border-radius:999px;
+            overflow:hidden; margin:1.5rem 0; display:none;
+        }
+        .progress-bar {
+            height:100%; width:0%; background:linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius:999px; transition:width 0.3s ease;
+        }
+        .progress-text {text-align:center; font-weight:700; color:var(--primary); margin-bottom:1rem; display:none;}
+        textarea {
+            width:100%; min-height:260px; padding:1.25rem; border:2px solid rgba(34,211,238,0.3);
+            border-radius:14px; font-size:0.9rem; font-family:monospace; line-height:1.8;
+            background:rgba(15,23,42,0.8); color:#e0f2fe; resize:vertical; margin-top:0.5rem;
+        }
+        .stats {display:flex; gap:1rem; flex-wrap:wrap; margin:1.5rem 0;}
+        .stat-box {
+            background:linear-gradient(135deg, rgba(34,211,238,0.1), rgba(16,185,129,0.1));
+            padding:1rem 1.25rem; border-radius:12px; font-weight:600; flex:1; min-width:140px;
+            text-align:center; border:1px solid rgba(34,211,238,0.15);
+        }
+        .stat-box strong {display:block; font-size:1.4rem; color:var(--primary); margin-top:0.3rem;}
+        .btn-group {display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:1.5rem;}
+        .btn-group button {flex:1; min-width:160px;}
+        .btn-success {background:linear-gradient(90deg, #10b981, #059669); color:white;}
+        .btn-secondary {background:transparent; color:var(--primary); border:2px solid var(--primary);}
+        .btn-danger {background:linear-gradient(90deg, #ef4444, #dc2626); color:white;}
+        .hidden {display:none !important;}
+        .error {color:#fca5a5; margin-top:0.5rem; display:none;}
+    </style>
+</head>
+<body>
+    <div class="bg-watermark">DANZZ TOOLS PEMISAH ULP</div>
+    <div class="bg-progress-text" id="bgProgressPercent">0%</div>
+    <div class="container">
+        <header><h1>✨ DANZZ TOOLS — PEMISAH ULP</h1></header>
+
+        <div class="card">
+            <h2>📋 Format Hasil</h2>
+            <div class="format-box">https://mtacc.mobilelegends.com/:FireADC9911:o96kp04m3x6</div>
+            
+            <h2>📤 Unggah File Sumber</h2>
+            <div class="info-note">📄 Bisa: privat ulp.txt, data.txt, file besar tetap aman!</div>
+            
+            <div class="upload-box" id="uploadBox">
+                <p style="font-size:1.1rem; font-weight:600; margin-bottom:0.5rem;">👆 Klik di sini untuk Pilih File</p>
+                <p style="font-size:0.9rem; color:#94a3b8;">Bisa .txt, .ulp, .log — ukuran besar tetap bisa!</p>
+                <input type="file" id="fileInput" accept=".txt,.ulp,.log,.csv,.text,text/plain">
+            </div>
+            
+            <div class="status" id="status"></div>
+            <div class="error" id="error"></div>
+
+            <button class="btn-primary" id="processBtn" disabled>🚀 MULAI EKSTRAKSI</button>
+            
+            <div class="progress-text" id="progressText">Memproses... <span id="percentText">0</span>%</div>
+            <div class="progress-container" id="progressContainer"><div class="progress-bar" id="progressBar"></div></div>
+        </div>
+
+        <div class="card hidden" id="resultCard">
+            <h2>✅ HASIL EKSTRAKSI LINK</h2>
+            <div class="stats">
+                <div class="stat-box">🔗 Total Link <strong id="totalCount">0</strong></div>
+                <div class="stat-box">🗑️ Duplikat Dihapus <strong id="dupCount">0</strong></div>
+                <div class="stat-box">✅ Unik <strong id="uniqueCount">0</strong></div>
+            </div>
+            <label style="font-weight:600; color:#cbd5e1;">📋 Semua Link Lengkap:</label>
+            <textarea id="resultArea" readonly placeholder="Hasil akan muncul di sini..."></textarea>
+            <div class="btn-group">
+                <button class="btn-success" id="downloadBtn">💾 UNDUH FILE (.txt)</button>
+                <button class="btn-secondary" id="copyBtn">📋 SALIN SEMUA LINK</button>
+                <button class="btn-danger" id="resetBtn">🔄 RESET BARU</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadBox = document.getElementById('uploadBox');
+        const fileInput = document.getElementById('fileInput');
+        const status = document.getElementById('status');
+        const error = document.getElementById('error');
+        const processBtn = document.getElementById('processBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressText = document.getElementById('progressText');
+        const progressBar = document.getElementById('progressBar');
+        const percentText = document.getElementById('percentText');
+        const bgProgressPercent = document.getElementById('bgProgressPercent');
+        const resultCard = document.getElementById('resultCard');
+        const resultArea = document.getElementById('resultArea');
+        const totalCount = document.getElementById('totalCount');
+        const dupCount = document.getElementById('dupCount');
+        const uniqueCount = document.getElementById('uniqueCount');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        let fileText = '';
+        let finalLinks = [];
+        const BASE = 'https://mtacc.mobilelegends.com/';
+
+        function showErr(msg) {
+            error.textContent = '⚠️ ' + msg;
+            error.style.display = 'block';
+        }
+        function hideErr() {
+            error.style.display = 'none';
+        }
+        function formatSize(b) {
+            if (b < 1024) return b + ' B';
+            if (b < 1024*1024) return (b/1024).toFixed(2) + ' KB';
+            return (b/(1024*1024)).toFixed(2) + ' MB';
+        }
+
+        // === UPLOAD — SANGAT SEDERHANA, PASTI BISA ===
+        uploadBox.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', e => {
+            hideErr();
+            fileText = '';
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (file.size === 0) {
+                showErr('File kosong! Pilih file yang berisi data.');
+                status.innerHTML = '<span style="color:#fca5a5;">❌ File kosong</span>';
+                processBtn.disabled = true;
+                return;
+            }
+
+            status.innerHTML = `📂 Dibaca: <strong>${file.name}</strong> (${formatSize(file.size)})`;
+            
+            const reader = new FileReader();
+            reader.onload = ev => {
+                fileText = ev.target.result;
+                if (!fileText || fileText.trim().length === 0) {
+                    showErr('Isi file kosong!');
+                    status.innerHTML = '<span style="color:#fca5a5;">❌ Isi kosong</span>';
+                    fileText = '';
+                    processBtn.disabled = true;
+                } else {
+                    status.innerHTML = `✅ Siap: <strong>${file.name}</strong> (${formatSize(file.size)}) — ${fileText.length.toLocaleString()} karakter`;
+                    processBtn.disabled = false;
+                }
+            };
+            reader.onerror = () => {
+                showErr('Gagal baca file! Coba file lain.');
+                processBtn.disabled = true;
+            };
+            reader.readAsText(file);
+        });
+
+        // === PROGRESS ANIMASI ===
+        function goProgress(to) {
+            return new Promise(res => {
+                progressContainer.style.display = 'block';
+                progressText.style.display = 'block';
+                let now = parseInt(progressBar.style.width) || 0;
+                const step = Math.max(1, Math.ceil((to - now) / 12));
+                const t = setInterval(() => {
+                    now += step;
+                    if (now >= to) { now = to; clearInterval(t); res(); }
+                    progressBar.style.width = now + '%';
+                    percentText.textContent = now;
+                    bgProgressPercent.textContent = now + '%';
+                }, 40);
+            });
+        }
+
+        // === EKSTRAKSI ===
+        processBtn.addEventListener('click', async () => {
+            hideErr();
+            if (!fileText) return showErr('Pilih file dulu!');
+
+            progressBar.style.width = '0%';
+            progressContainer.style.display = 'block';
+            progressText.style.display = 'block';
+            bgProgressPercent.textContent = '0%';
+            processBtn.disabled = true;
+
+            await goProgress(20);
+            const regex = /:[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+/g;
+            await goProgress(40);
+            
+            const matches = fileText.match(regex) || [];
+            await goProgress(60);
+
+            if (matches.length === 0) {
+                showErr('Tidak menemukan format :Nama:Kode di dalam file!');
+                progressContainer.style.display = 'none';
+                progressText.style.display = 'none';
+                bgProgressPercent.textContent = '';
+                processBtn.disabled = false;
+                return;
+            }
+
+            const unique = [...new Set(matches)];
+            await goProgress(80);
+
+            finalLinks = unique.map(m => BASE + m);
+            await goProgress(100);
+
+            // Tampil hasil
+            resultArea.value = finalLinks.join('\n');
+            totalCount.textContent = finalLinks.length;
+            dupCount.textContent = matches.length - unique.length;
+            uniqueCount.textContent = unique.length;
+
+            setTimeout(() => {
+                progressContainer.style.display = 'none';
+                progressText.style.display = 'none';
+                progressBar.style.width = '0%';
+                bgProgressPercent.textContent = '';
+                processBtn.disabled = false;
+            }, 1500);
+
+            resultCard.classList.remove('hidden');
+            resultCard.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        // === DOWNLOAD ===
+        downloadBtn.addEventListener('click', () => {
+            if (!finalLinks.length) return;
+            const blob = new Blob([finalLinks.join('\n')], {type:'text/plain;charset=utf-8'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `DANZZ-ULP-${new Date().toISOString().slice(0,10)}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        // === COPY ===
+        copyBtn.addEventListener('click', async () => {
+            if (!finalLinks.length) return;
+            await navigator.clipboard.writeText(finalLinks.join('\n'));
+            alert('✅ Disalin!');
+        });
+
+        // === RESET ===
+        resetBtn.addEventListener('click', () => {
+            fileText = '';
+            finalLinks = [];
+            fileInput.value = '';
+            status.innerHTML = '';
+            hideErr();
+            resultCard.classList.add('hidden');
+            progressContainer.style.display = 'none';
+            progressText.style.display = 'none';
+            progressBar.style.width = '0%';
+            bgProgressPercent.textContent = '';
+            processBtn.disabled = true;
+            window.scrollTo({ top:0, behavior:'smooth' });
+        });
+    </script>
+</body>
+</html>
